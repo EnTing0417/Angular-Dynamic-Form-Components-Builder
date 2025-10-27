@@ -1,0 +1,5 @@
+{
+  "name": "Angular Form Components Showcase",
+  "description": "A showcase of complex, reusable simple (text field, text area, checkbox and radio buttons) and custom form components (Address and Phone number) built with Angular's template-driven approach and styled with Tailwind CSS.",
+  "requestFramePermissions": []
+}

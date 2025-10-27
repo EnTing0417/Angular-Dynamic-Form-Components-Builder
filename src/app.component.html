@@ -1,0 +1,267 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 transition-colors duration-300">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+    
+    <!-- Left Panel: Component Palette & Properties -->
+    <aside class="md:col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 h-fit sticky top-4">
+      <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Components</h2>
+      <div class="space-y-3">
+        @for(field of availableFields; track field.type) {
+          <div 
+            class="flex items-center gap-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-grab hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+            draggable="true"
+            (dragstart)="onPaletteDragStart($event, field.type)"
+          >
+            <svg class="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="field.icon"></path>
+            </svg>
+            <span class="font-medium text-sm">{{ field.label }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Properties</h2>
+        <app-property-panel
+          [field]="selectedField()"
+          (fieldChange)="updateField($event)">
+        </app-property-panel>
+      </div>
+    </aside>
+
+    <!-- Right Panel: Form Builder -->
+    <main class="md:col-span-3" (click)="selectedFieldIndex.set(null)">
+      <div class="w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <header class="flex justify-between items-center mb-6">
+          <h1 class="text-3xl font-bold text-gray-800 dark:text-white">User Profile</h1>
+          <button (click)="themeService.toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" aria-label="Toggle theme">
+            @if (themeService.theme() === 'light') {
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            } @else {
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            }
+          </button>
+        </header>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          Click a field to edit its properties. Drag components from the left panel to add them, or drag existing fields to re-order.
+        </p>
+
+        <form #userForm="ngForm" (ngSubmit)="onSubmit(userForm)" novalidate>
+          <div class="space-y-2" (dragover)="onDragOver($event)" (drop)="onDrop($event, formFields().length)">
+            @if (formFields().length === 0) {
+              <div class="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                <p class="text-gray-500 dark:text-gray-400">Drag components here to build your form.</p>
+              </div>
+            }
+            @for (field of formFields(); track field.id; let i = $index) {
+              <div 
+                class="draggable-field p-2 border border-dashed border-transparent hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 flex items-start gap-x-2 group"
+                [class.selected-field]="selectedFieldIndex() === i"
+                draggable="true"
+                (click)="selectField(i, $event)"
+                (dragstart)="onFieldDragStart($event, i)"
+                (dragover)="onDragOver($event)"
+                (dragenter)="onDragEnter($event, i)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event, i)"
+                (dragend)="onDragEnd()"
+              >
+                <div class="pt-4 flex-shrink-0 cursor-move">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-400">
+                    <path fill-rule="evenodd" d="M10 5.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm-3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-7 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-3.5 1.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="flex-grow">
+                  @switch (field.component) {
+                    @case ('text') {
+                      <div>
+                        <app-text-input
+                          [label]="field.label"
+                          [id]="field.id"
+                          [name]="field.name"
+                          [type]="field.type || 'text'"
+                          [ngModel]="userProfile()[field.modelProperty]"
+                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                          [required]="field.required"
+                          [pattern]="field.pattern"
+                        ></app-text-input>
+                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                            @if (userForm.controls[field.name]?.errors?.['required']) {
+                              <p>{{ getLabel(field) }} is required.</p>
+                            }
+                            @if (userForm.controls[field.name]?.errors?.['pattern']) {
+                              <p>Please enter a valid email address.</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                    @case ('phone') {
+                      <div>
+                        <app-phone-input
+                          [name]="field.name"
+                          [legend]="field.legend"
+                          [countryCodeLabel]="field.countryCodeLabel"
+                          [numberLabel]="field.numberLabel"
+                          [ngModel]="userProfile()[field.modelProperty]"
+                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                          [required]="field.required"
+                        ></app-phone-input>
+                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                          <div class="text-red-500 text-sm -mt-2 px-1 space-y-1 pb-2">
+                            @if (userForm.controls[field.name]?.errors?.['required']) {
+                              <p>Phone number is required.</p>
+                            }
+                            @if (userForm.controls[field.name]?.errors?.['codeRequired']) {
+                              <p>Country code is required.</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                    @case ('address') {
+                      <div>
+                        <app-address-input
+                          [name]="field.name"
+                          [legend]="field.legend"
+                          [streetLabel]="field.streetLabel"
+                          [cityLabel]="field.cityLabel"
+                          [stateLabel]="field.stateLabel"
+                          [zipLabel]="field.zipLabel"
+                          [countryLabel]="field.countryLabel"
+                          [ngModel]="userProfile()[field.modelProperty]"
+                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                          [required]="field.required"
+                        ></app-address-input>
+                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                          <div class="text-red-500 text-sm -mt-2 px-1 space-y-1 pb-2">
+                            @if (userForm.controls[field.name]?.errors?.['required']) {
+                              <p>Shipping address is required.</p>
+                            }
+                            @if (userForm.controls[field.name]?.errors?.['streetRequired']) {
+                              <p>Street is required.</p>
+                            }
+                            @if (userForm.controls[field.name]?.errors?.['cityRequired']) {
+                              <p>City is required.</p>
+                            }
+                             @if (userForm.controls[field.name]?.errors?.['stateRequired']) {
+                              <p>State is required.</p>
+                            }
+                            @if (userForm.controls[field.name]?.errors?.['zipRequired']) {
+                              <p>ZIP code is required.</p>
+                            }
+                            @if (userForm.controls[field.name]?.errors?.['countryRequired']) {
+                              <p>Country is required.</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                    @case ('textarea') {
+                      <app-textarea-input
+                        [label]="field.label"
+                        [id]="field.id"
+                        [name]="field.name"
+                        [ngModel]="userProfile()[field.modelProperty]"
+                        (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                        [placeholder]="field.placeholder"
+                      ></app-textarea-input>
+                    }
+                    @case ('radio') {
+                      <div>
+                        <app-radio-group
+                          [legend]="field.legend"
+                          [name]="field.name"
+                          [options]="field.options"
+                          [ngModel]="userProfile()[field.modelProperty]"
+                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                          [required]="field.required"
+                        ></app-radio-group>
+                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                            @if (userForm.controls[field.name]?.errors?.['required']) {
+                              <p>Please select an option for {{ getLabel(field) }}.</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                     @case ('checkbox-group') {
+                      <div>
+                        <app-checkbox-group
+                          [legend]="field.legend"
+                          [name]="field.name"
+                          [options]="field.options"
+                          [ngModel]="userProfile()[field.modelProperty]"
+                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                          [required]="field.required"
+                        ></app-checkbox-group>
+                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                            @if (userForm.controls[field.name]?.errors?.['required']) {
+                              <p>Please select at least one option for {{ getLabel(field) }}.</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                    @case ('checkbox') {
+                      <div>
+                        <app-checkbox-input
+                          [label]="field.label"
+                          [id]="field.id"
+                          [name]="field.name"
+                          [ngModel]="userProfile()[field.modelProperty]"
+                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                          [required]="field.required"
+                        ></app-checkbox-input>
+                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                            @if (userForm.controls[field.name]?.errors?.['required']) {
+                              <p>You must accept the {{ getLabel(field) }}.</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+                <div class="pt-4 flex-shrink-0">
+                  <button type="button" (click)="deleteField(i)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete field">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193v-.443A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+          
+          <div class="flex gap-4 pt-4">
+            <button type="button" (click)="resetForm(userForm)" class="w-full py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-indigo-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+              Reset
+            </button>
+            <button type="submit" [disabled]="userForm.invalid" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:bg-indigo-400 disabled:cursor-not-allowed dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800">
+              Submit Profile
+            </button>
+          </div>
+        </form>
+        
+        <div class="mt-8 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+          <h3 class="font-semibold text-lg mb-2">Live Form Status</h3>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <div>Valid: <span class="font-mono" [class]="userForm.valid ? 'text-green-500' : 'text-red-500'">{{ userForm.valid }}</span></div>
+            <div>Invalid: <span class="font-mono" [class]="userForm.invalid ? 'text-red-500' : 'text-green-500'">{{ userForm.invalid }}</span></div>
+            <div>Touched: <span class="font-mono">{{ userForm.touched }}</span></div>
+            <div>Untouched: <span class="font-mono">{{ userForm.untouched }}</span></div>
+            <div>Dirty: <span class="font-mono">{{ userForm.dirty }}</span></div>
+            <div>Pristine: <span class="font-mono">{{ userForm.pristine }}</span></div>
+          </div>
+          <h4 class="font-semibold mt-4 mb-1">Form Value:</h4>
+          <pre class="text-xs bg-gray-200 dark:bg-gray-900 p-2 rounded mt-2 overflow-x-auto"><code>{{ userForm.value | json }}</code></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
