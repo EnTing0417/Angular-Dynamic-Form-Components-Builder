@@ -3,11 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormField, TextField, TextareaField, CheckboxField, RadioField, PhoneField, AddressField, CheckboxGroupField } from '../../form-field.model';
 import { TextInputComponent } from '../simple/text-input/text-input.component';
-import { CheckboxInputComponent } from '../simple/checkbox-input/checkbox-input.component';
 
 @Component({
   selector: 'app-property-panel',
-  imports: [CommonModule, FormsModule, TextInputComponent, CheckboxInputComponent],
+  imports: [CommonModule, FormsModule, TextInputComponent],
   template: `
     @if (editableField(); as field) {
       <div class="space-y-4 text-sm">

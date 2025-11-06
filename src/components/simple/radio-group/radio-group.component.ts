@@ -3,7 +3,7 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BaseControlValueAccessor } from '../../base-control';
 // FIX: Corrected the relative path to form-field.model.ts
-import { FormOption } from '../../form-field.model';
+import { FormOption } from '../../../form-field.model';
 
 @Component({
   selector: 'app-radio-group',

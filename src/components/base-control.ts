@@ -1,6 +1,8 @@
+import { Directive } from '@angular/core';
 import { signal, WritableSignal, OnInit, inject, Injector, computed, Signal, input } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
 
+@Directive()
 export abstract class BaseControlValueAccessor<T> implements ControlValueAccessor, OnInit {
   value: WritableSignal<T | null> = signal(null);
   disabled = signal(false);
