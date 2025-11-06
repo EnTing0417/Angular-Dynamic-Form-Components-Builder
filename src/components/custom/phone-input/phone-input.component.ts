@@ -20,7 +20,7 @@ export interface Phone {
         [class]="isInvalid()
             ? 'text-red-600 dark:text-red-500'
             : 'text-gray-700 dark:text-gray-300'">
-        {{ legend() }} @if(isRequired()) {<span class="text-red-500">*</span>}
+        {{ legend() }} @if(required()) {<span class="text-red-500">*</span>}
       </legend>
       @if(value(); as phone) {
         <div class="flex space-x-2">
@@ -77,34 +77,39 @@ export class PhoneInputComponent extends BaseControlValueAccessor<Phone> impleme
   numberLabel = input<string>('Number');
 
   isCodeInvalid = computed(() => this.isInvalid() && !!this.ngControl?.errors?.['codeRequired']);
-  isNumberInvalid = computed(() => this.isInvalid() && !!this.ngControl?.errors?.['required']);
+  isNumberInvalid = computed(() => this.isInvalid() && !!this.ngControl?.errors?.['numberRequired']);
 
   override writeValue(value: Phone | null): void {
     super.writeValue(value ?? { countryCode: '+1', number: '' });
   }
 
   updateField(field: keyof Phone, fieldValue: string): void {
-    const currentPhone = this.value() || { countryCode: '+1', number: '' };
+    const currentPhone = this.value() ?? { countryCode: '+1', number: '' };
     const newPhone = { ...currentPhone, [field]: fieldValue };
     this.value.set(newPhone);
-    this.onChange(newPhone.number ? newPhone : null);
+    this.onChange(newPhone);
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
     const value = control.value as Phone | null;
-    if (!value) {
-      return null;
+    
+    if (!value || typeof value !== 'object') {
+        return this.required() ? { required: true } : null;
     }
-
+    
     const { countryCode, number } = value;
-    if (!number) {
-      return null;
+    const isAllEmpty = !countryCode && !number;
+
+    if (isAllEmpty) {
+      // If all fields are empty, it's a 'required' error only if the component is required.
+      // If it's optional, it's valid (return null).
+      return this.required() ? { required: true } : null;
     }
 
+    // If it's not all empty (i.e., partially filled), all sub-fields become mandatory.
     const errors: ValidationErrors = {};
-    if (!countryCode) {
-      errors['codeRequired'] = true;
-    }
+    if (!countryCode) errors['codeRequired'] = true;
+    if (!number) errors['numberRequired'] = true;
     
     return Object.keys(errors).length > 0 ? errors : null;
   }

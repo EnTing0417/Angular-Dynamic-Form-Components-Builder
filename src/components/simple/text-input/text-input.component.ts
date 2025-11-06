@@ -45,6 +45,10 @@ export class TextInputComponent extends BaseControlValueAccessor<string> {
   // Re-declare inherited input to make it visible to the template compiler
   forceInvalid = input<boolean>(false);
 
+  override writeValue(value: string | null): void {
+    this.value.set(value ?? '');
+  }
+
   onValueChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.value.set(value);

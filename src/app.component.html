@@ -29,7 +29,11 @@
     </aside>
 
     <!-- Right Panel: Form Builder -->
-    <main class="md:col-span-3" (click)="selectedFieldIndex.set(null)">
+    <main class="md:col-span-3 space-y-8" (click)="selectedFieldPath.set(null)">
+      <div class="w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <app-form-configuration (formReload)="reloadForm()"></app-form-configuration>
+      </div>
+      
       <div class="w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         <header class="flex justify-between items-center mb-6">
           <h1 class="text-3xl font-bold text-gray-800 dark:text-white">User Profile</h1>
@@ -46,207 +50,258 @@
           Click a field to edit its properties. Drag components from the left panel to add them, or drag existing fields to re-order.
         </p>
 
-        <form #userForm="ngForm" (ngSubmit)="onSubmit(userForm)" novalidate>
-          <div class="space-y-2" (dragover)="onDragOver($event)" (drop)="onDrop($event, formFields().length)">
-            @if (formFields().length === 0) {
-              <div class="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                <p class="text-gray-500 dark:text-gray-400">Drag components here to build your form.</p>
-              </div>
-            }
-            @for (field of formFields(); track field.id; let i = $index) {
-              <div 
-                class="draggable-field p-2 border border-dashed border-transparent hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 flex items-start gap-x-2 group"
-                [class.selected-field]="selectedFieldIndex() === i"
-                draggable="true"
-                (click)="selectField(i, $event)"
-                (dragstart)="onFieldDragStart($event, i)"
-                (dragover)="onDragOver($event)"
-                (dragenter)="onDragEnter($event, i)"
-                (dragleave)="onDragLeave($event)"
-                (drop)="onDrop($event, i)"
-                (dragend)="onDragEnd()"
-              >
-                <div class="pt-4 flex-shrink-0 cursor-move">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-400">
-                    <path fill-rule="evenodd" d="M10 5.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm-3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-7 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-3.5 1.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" clip-rule="evenodd" />
-                  </svg>
+        <div class="flex flex-col md:flex-row gap-8">
+          <!-- Page Navigation -->
+          <aside class="w-full md:w-48 flex-shrink-0">
+            <nav class="space-y-1" aria-label="Pages">
+              @for(page of formPages(); track page.title; let i = $index) {
+                <a 
+                  (click)="currentPageIndex.set(i)"
+                  class="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer"
+                  [class]="currentPageIndex() === i 
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
+                    : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50'">
+                  {{ page.title }}
+                </a>
+              }
+            </nav>
+          </aside>
+
+          <!-- Form Content -->
+          <div class="flex-grow">
+            <form #userForm="ngForm" (ngSubmit)="onSubmit(userForm)" novalidate>
+              @for (page of formPages(); track page.title; let p_index = $index) {
+                <div [hidden]="currentPageIndex() !== p_index">
+                  <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">{{ page.title }}</h2>
+                  <div class="space-y-2" (dragover)="onDragOver($event)" (drop)="onDrop($event, p_index, page.fields.length)">
+                     @if (page.fields.length === 0) {
+                      <div class="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                        <p class="text-gray-500 dark:text-gray-400">Drag components here to build your form.</p>
+                      </div>
+                    }
+                    @for (field of page.fields; track field.id; let f_index = $index) {
+                      <div 
+                        class="draggable-field p-2 border border-dashed border-transparent hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 flex items-start gap-x-2 group"
+                        [class.selected-field]="selectedFieldPath()?.pageIndex === p_index && selectedFieldPath()?.fieldIndex === f_index"
+                        draggable="true"
+                        (click)="selectField(p_index, f_index, $event)"
+                        (dragstart)="onFieldDragStart($event, p_index, f_index)"
+                        (dragover)="onDragOver($event)"
+                        (dragenter)="onDragEnter($event, p_index, f_index)"
+                        (dragleave)="onDragLeave($event)"
+                        (drop)="onDrop($event, p_index, f_index)"
+                        (dragend)="onDragEnd()"
+                      >
+                        <div class="pt-4 flex-shrink-0 cursor-move">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-400">
+                            <path fill-rule="evenodd" d="M10 5.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm-3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-7 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-3.5 1.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" clip-rule="evenodd" />
+                          </svg>
+                        </div>
+                        <div class="flex-grow">
+                          @switch (field.component) {
+                            @case ('text') {
+                              <div>
+                                <app-text-input
+                                  [label]="field.label"
+                                  [id]="field.id"
+                                  [name]="field.name"
+                                  [type]="field.type || 'text'"
+                                  [ngModel]="userProfile()[field.modelProperty]"
+                                  (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                  [required]="field.required"
+                                  [pattern]="field.pattern"
+                                ></app-text-input>
+                                @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                                  <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                                    @if (userForm.controls[field.name]?.errors?.['required']) {
+                                      <p>{{ getLabel(field) }} is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['pattern']) {
+                                      <p>Please enter a valid email address.</p>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                            @case ('phone') {
+                              <div>
+                                <app-phone-input
+                                  [name]="field.name"
+                                  [legend]="field.legend"
+                                  [countryCodeLabel]="field.countryCodeLabel"
+                                  [numberLabel]="field.numberLabel"
+                                  [ngModel]="userProfile()[field.modelProperty]"
+                                  (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                  [required]="field.required"
+                                ></app-phone-input>
+                                @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                                  <div class="text-red-500 text-sm -mt-2 px-1 space-y-1 pb-2">
+                                    @if (userForm.controls[field.name]?.errors?.['required']) {
+                                      <p>{{ getLabel(field) }} is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['numberRequired']) {
+                                      <p>Number is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['codeRequired']) {
+                                      <p>Country code is required.</p>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                            @case ('address') {
+                              <div>
+                                <app-address-input
+                                  [name]="field.name"
+                                  [legend]="field.legend"
+                                  [streetLabel]="field.streetLabel"
+                                  [cityLabel]="field.cityLabel"
+                                  [stateLabel]="field.stateLabel"
+                                  [zipLabel]="field.zipLabel"
+                                  [countryLabel]="field.countryLabel"
+                                  [ngModel]="userProfile()[field.modelProperty]"
+                                  (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                  [required]="field.required"
+                                ></app-address-input>
+                                @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                                  <div class="text-red-500 text-sm -mt-2 px-1 space-y-1 pb-2">
+                                    @if (userForm.controls[field.name]?.errors?.['required']) {
+                                      <p>Shipping address is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['streetRequired']) {
+                                      <p>Street is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['cityRequired']) {
+                                      <p>City is required.</p>
+                                    }
+                                     @if (userForm.controls[field.name]?.errors?.['stateRequired']) {
+                                      <p>State is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['zipRequired']) {
+                                      <p>ZIP code is required.</p>
+                                    }
+                                    @if (userForm.controls[field.name]?.errors?.['countryRequired']) {
+                                      <p>Country is required.</p>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                            @case ('textarea') {
+                              <app-textarea-input
+                                [label]="field.label"
+                                [id]="field.id"
+                                [name]="field.name"
+                                [ngModel]="userProfile()[field.modelProperty]"
+                                (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                [placeholder]="field.placeholder"
+                              ></app-textarea-input>
+                            }
+                            @case ('radio') {
+                              <div>
+                                <app-radio-group
+                                  [legend]="field.legend"
+                                  [name]="field.name"
+                                  [options]="field.options"
+                                  [ngModel]="userProfile()[field.modelProperty]"
+                                  (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                  [required]="field.required"
+                                ></app-radio-group>
+                                @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                                  <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                                    @if (userForm.controls[field.name]?.errors?.['required']) {
+                                      <p>Please select an option for {{ getLabel(field) }}.</p>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                             @case ('checkbox-group') {
+                              <div>
+                                <app-checkbox-group
+                                  [legend]="field.legend"
+                                  [name]="field.name"
+                                  [options]="field.options"
+                                  [ngModel]="userProfile()[field.modelProperty]"
+                                  (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                  [required]="field.required"
+                                ></app-checkbox-group>
+                                @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                                  <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                                    @if (userForm.controls[field.name]?.errors?.['required']) {
+                                      <p>Please select at least one option for {{ getLabel(field) }}.</p>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                            @case ('checkbox') {
+                              <div>
+                                <app-checkbox-input
+                                  [label]="field.label"
+                                  [id]="field.id"
+                                  [name]="field.name"
+                                  [ngModel]="userProfile()[field.modelProperty]"
+                                  (ngModelChange)="onModelChange(field.modelProperty, $event)"
+                                  [required]="field.required"
+                                ></app-checkbox-input>
+                                @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
+                                  <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
+                                    @if (userForm.controls[field.name]?.errors?.['required']) {
+                                      <p>You must accept the {{ getLabel(field) }}.</p>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                          }
+                        </div>
+                        <div class="pt-4 flex-shrink-0">
+                          <button type="button" (click)="deleteField(p_index, f_index)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete field">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                              <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193v-.443A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clip-rule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
-                <div class="flex-grow">
-                  @switch (field.component) {
-                    @case ('text') {
-                      <div>
-                        <app-text-input
-                          [label]="field.label"
-                          [id]="field.id"
-                          [name]="field.name"
-                          [type]="field.type || 'text'"
-                          [ngModel]="userProfile()[field.modelProperty]"
-                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                          [required]="field.required"
-                          [pattern]="field.pattern"
-                        ></app-text-input>
-                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
-                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
-                            @if (userForm.controls[field.name]?.errors?.['required']) {
-                              <p>{{ getLabel(field) }} is required.</p>
-                            }
-                            @if (userForm.controls[field.name]?.errors?.['pattern']) {
-                              <p>Please enter a valid email address.</p>
-                            }
-                          </div>
-                        }
-                      </div>
+              }
+              <div class="pt-4">
+                @if (submissionStatus() === 'submitted') {
+                  <div class="p-3 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+                    <span class="font-medium">Success!</span> Your profile has been updated. Resetting the form will now revert to this new state.
+                  </div>
+                }
+                @if (submissionAttempted() && userForm.invalid) {
+                  <div class="p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                    <span class="font-medium">Error!</span> Please fill out all required fields before submitting. The invalid fields have been highlighted.
+                  </div>
+                }
+                <div class="flex gap-4">
+                  <button type="button" (click)="resetForm(userForm)" class="w-full py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-indigo-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    Reset
+                  </button>
+                  <button 
+                    type="submit" 
+                    [disabled]="userForm.invalid || !isFormDirty() || submissionStatus() === 'submitting'" 
+                    class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:bg-indigo-400 disabled:cursor-not-allowed dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800 flex justify-center items-center">
+                    @if (submissionStatus() === 'submitting') {
+                      <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Submitting...</span>
+                    } @else {
+                      <span>Submit Profile</span>
                     }
-                    @case ('phone') {
-                      <div>
-                        <app-phone-input
-                          [name]="field.name"
-                          [legend]="field.legend"
-                          [countryCodeLabel]="field.countryCodeLabel"
-                          [numberLabel]="field.numberLabel"
-                          [ngModel]="userProfile()[field.modelProperty]"
-                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                          [required]="field.required"
-                        ></app-phone-input>
-                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
-                          <div class="text-red-500 text-sm -mt-2 px-1 space-y-1 pb-2">
-                            @if (userForm.controls[field.name]?.errors?.['required']) {
-                              <p>Phone number is required.</p>
-                            }
-                            @if (userForm.controls[field.name]?.errors?.['codeRequired']) {
-                              <p>Country code is required.</p>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                    @case ('address') {
-                      <div>
-                        <app-address-input
-                          [name]="field.name"
-                          [legend]="field.legend"
-                          [streetLabel]="field.streetLabel"
-                          [cityLabel]="field.cityLabel"
-                          [stateLabel]="field.stateLabel"
-                          [zipLabel]="field.zipLabel"
-                          [countryLabel]="field.countryLabel"
-                          [ngModel]="userProfile()[field.modelProperty]"
-                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                          [required]="field.required"
-                        ></app-address-input>
-                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
-                          <div class="text-red-500 text-sm -mt-2 px-1 space-y-1 pb-2">
-                            @if (userForm.controls[field.name]?.errors?.['required']) {
-                              <p>Shipping address is required.</p>
-                            }
-                            @if (userForm.controls[field.name]?.errors?.['streetRequired']) {
-                              <p>Street is required.</p>
-                            }
-                            @if (userForm.controls[field.name]?.errors?.['cityRequired']) {
-                              <p>City is required.</p>
-                            }
-                             @if (userForm.controls[field.name]?.errors?.['stateRequired']) {
-                              <p>State is required.</p>
-                            }
-                            @if (userForm.controls[field.name]?.errors?.['zipRequired']) {
-                              <p>ZIP code is required.</p>
-                            }
-                            @if (userForm.controls[field.name]?.errors?.['countryRequired']) {
-                              <p>Country is required.</p>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                    @case ('textarea') {
-                      <app-textarea-input
-                        [label]="field.label"
-                        [id]="field.id"
-                        [name]="field.name"
-                        [ngModel]="userProfile()[field.modelProperty]"
-                        (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                        [placeholder]="field.placeholder"
-                      ></app-textarea-input>
-                    }
-                    @case ('radio') {
-                      <div>
-                        <app-radio-group
-                          [legend]="field.legend"
-                          [name]="field.name"
-                          [options]="field.options"
-                          [ngModel]="userProfile()[field.modelProperty]"
-                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                          [required]="field.required"
-                        ></app-radio-group>
-                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
-                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
-                            @if (userForm.controls[field.name]?.errors?.['required']) {
-                              <p>Please select an option for {{ getLabel(field) }}.</p>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                     @case ('checkbox-group') {
-                      <div>
-                        <app-checkbox-group
-                          [legend]="field.legend"
-                          [name]="field.name"
-                          [options]="field.options"
-                          [ngModel]="userProfile()[field.modelProperty]"
-                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                          [required]="field.required"
-                        ></app-checkbox-group>
-                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
-                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
-                            @if (userForm.controls[field.name]?.errors?.['required']) {
-                              <p>Please select at least one option for {{ getLabel(field) }}.</p>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                    @case ('checkbox') {
-                      <div>
-                        <app-checkbox-input
-                          [label]="field.label"
-                          [id]="field.id"
-                          [name]="field.name"
-                          [ngModel]="userProfile()[field.modelProperty]"
-                          (ngModelChange)="onModelChange(field.modelProperty, $event)"
-                          [required]="field.required"
-                        ></app-checkbox-input>
-                        @if (userForm.controls[field.name]?.invalid && (userForm.controls[field.name]?.dirty || userForm.controls[field.name]?.touched)) {
-                          <div class="text-red-500 text-sm -mt-2 px-1 pb-2">
-                            @if (userForm.controls[field.name]?.errors?.['required']) {
-                              <p>You must accept the {{ getLabel(field) }}.</p>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                  }
-                </div>
-                <div class="pt-4 flex-shrink-0">
-                  <button type="button" (click)="deleteField(i)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete field">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193v-.443A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clip-rule="evenodd" />
-                    </svg>
                   </button>
                 </div>
               </div>
-            }
+            </form>
           </div>
-          
-          <div class="flex gap-4 pt-4">
-            <button type="button" (click)="resetForm(userForm)" class="w-full py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-indigo-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-              Reset
-            </button>
-            <button type="submit" [disabled]="userForm.invalid" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:bg-indigo-400 disabled:cursor-not-allowed dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800">
-              Submit Profile
-            </button>
-          </div>
-        </form>
+        </div>
         
         <div class="mt-8 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
           <h3 class="font-semibold text-lg mb-2">Live Form Status</h3>
@@ -255,8 +310,8 @@
             <div>Invalid: <span class="font-mono" [class]="userForm.invalid ? 'text-red-500' : 'text-green-500'">{{ userForm.invalid }}</span></div>
             <div>Touched: <span class="font-mono">{{ userForm.touched }}</span></div>
             <div>Untouched: <span class="font-mono">{{ userForm.untouched }}</span></div>
-            <div>Dirty: <span class="font-mono">{{ userForm.dirty }}</span></div>
-            <div>Pristine: <span class="font-mono">{{ userForm.pristine }}</span></div>
+            <div>Dirty: <span class="font-mono" [class]="isFormDirty() ? 'text-yellow-500' : 'text-green-500'">{{ isFormDirty() }}</span></div>
+            <div>Pristine: <span class="font-mono" [class]="!isFormDirty() ? 'text-green-500' : 'text-yellow-500'">{{ !isFormDirty() }}</span></div>
           </div>
           <h4 class="font-semibold mt-4 mb-1">Form Value:</h4>
           <pre class="text-xs bg-gray-200 dark:bg-gray-900 p-2 rounded mt-2 overflow-x-auto"><code>{{ userForm.value | json }}</code></pre>

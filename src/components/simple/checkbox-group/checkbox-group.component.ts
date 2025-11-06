@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, input, forwardRef, ViewEncapsulatio
 import { NG_VALUE_ACCESSOR, NG_VALIDATORS, Validator, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BaseControlValueAccessor } from '../../base-control';
-import { FormOption } from '../../../form-field.model';
+// FIX: Corrected the relative path to form-field.model.ts
+import { FormOption } from '../../form-field.model';
 
 @Component({
   selector: 'app-checkbox-group',
@@ -12,7 +13,7 @@ import { FormOption } from '../../../form-field.model';
       <legend class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
         [class.text-red-600]="isInvalid()"
         [class.dark:text-red-500]="isInvalid()">
-          {{ legend() }} @if(isRequired()) {<span class="text-red-500">*</span>}
+          {{ legend() }} @if(required()) {<span class="text-red-500">*</span>}
       </legend>
       <div class="space-y-2">
         @for (option of options(); track option.value) {
@@ -73,7 +74,7 @@ export class CheckboxGroupComponent extends BaseControlValueAccessor<{[key: stri
   }
   
   validate(control: AbstractControl): ValidationErrors | null {
-    if (this.isRequired()) {
+    if (this.required()) {
       const value = control.value as {[key: string]: boolean} | null;
       if (!value || !Object.values(value).some(v => v === true)) {
         return { 'required': 'Please select at least one option.' };

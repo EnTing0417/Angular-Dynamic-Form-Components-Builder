@@ -45,6 +45,16 @@ The application is built around a central `AppComponent` that manages the state 
 - **Angular Signals**: For reactive state management within the components.
 - **Angular Template-Driven Forms**: For managing form controls, validation, and data binding.
 
+## Running Unit Tests
+
+This project includes a suite of unit tests located in `.spec.ts` files alongside their corresponding source files. These tests are written using Angular's testing utilities (`TestBed`) and Jasmine.
+
+To run these tests, you would typically use the Angular CLI in a standard project setup:
+```bash
+ng test
+```
+However, this project is configured for a browser-based, "buildless" development environment that does not include a test runner. Therefore, while the test files are present and valid, they cannot be executed directly within this specific environment. They are provided as a demonstration of best practices for testing Angular applications.
+
 ## How to Run Locally
 
 This project is designed for a browser-based development environment that handles TypeScript compilation and dependency management automatically, which is why it lacks a `package.json` or `angular.json` file.

@@ -1,16 +1,16 @@
-import { signal, WritableSignal, OnInit, inject, Injector, computed, Signal, input, ElementRef } from '@angular/core';
+import { signal, WritableSignal, OnInit, inject, Injector, computed, Signal, input } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
 
 export abstract class BaseControlValueAccessor<T> implements ControlValueAccessor, OnInit {
   value: WritableSignal<T | null> = signal(null);
   disabled = signal(false);
   forceInvalid = input<boolean>(false);
+  required = input(false, {
+    transform: (value: boolean | string) => value === '' || value === true || value === 'true'
+  });
 
   private injector = inject(Injector);
-  private elementRef = inject(ElementRef);
   protected ngControl: NgControl | null = null;
-  
-  isRequired = signal(false);
   
   isInvalid: Signal<boolean> = computed(() => {
     if (this.forceInvalid()) {
@@ -25,7 +25,6 @@ export abstract class BaseControlValueAccessor<T> implements ControlValueAccesso
 
   ngOnInit(): void {
     this.ngControl = this.injector.get(NgControl, null);
-    this.isRequired.set(this.elementRef.nativeElement.hasAttribute('required'));
   }
 
   onChange: (value: T | null) => void = () => {};

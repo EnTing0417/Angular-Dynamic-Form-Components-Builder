@@ -23,7 +23,7 @@ export interface Address {
         [class]="isInvalid()
             ? 'text-red-600 dark:text-red-500'
             : 'text-gray-700 dark:text-gray-300'">
-        {{ legend() }} @if(isRequired()) {<span class="text-red-500">*</span>}
+        {{ legend() }} @if(required()) {<span class="text-red-500">*</span>}
       </legend>
       @if(value(); as address) {
         <div class="space-y-2">
@@ -117,30 +117,29 @@ export class AddressInputComponent extends BaseControlValueAccessor<Address> imp
   }
 
   updateField(field: keyof Address, fieldValue: string): void {
-    const currentAddress = this.value() || { street: '', city: '', state: '', zip: '', country: '' };
+    const currentAddress = this.value() ?? { street: '', city: '', state: '', zip: '', country: '' };
     const newAddress = { ...currentAddress, [field]: fieldValue };
     this.value.set(newAddress);
-    
-    const { street, city, state, zip, country } = newAddress;
-    if (street || city || state || zip || country) {
-      this.onChange(newAddress);
-    } else {
-      this.onChange(null);
-    }
+    this.onChange(newAddress);
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
     const value = control.value as Address | null;
-    if (!value) {
-      return null;
+    
+    if (!value || typeof value !== 'object') {
+      return this.required() ? { required: true } : null;
     }
 
     const { street, city, state, zip, country } = value;
-    // Only validate if at least one field is filled.
-    if (!street && !city && !state && !zip && !country) {
-      return null;
+    const isAllEmpty = !street && !city && !state && !zip && !country;
+
+    if (isAllEmpty) {
+      // If all fields are empty, it's a 'required' error only if the component is required.
+      // If it's optional, it's valid (return null).
+      return this.required() ? { required: true } : null;
     }
 
+    // If it's not all empty (i.e., partially filled), all sub-fields become mandatory.
     const errors: ValidationErrors = {};
     if (!street) errors['streetRequired'] = true;
     if (!city) errors['cityRequired'] = true;

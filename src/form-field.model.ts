@@ -1,70 +1,74 @@
-// --- Type Definitions for Dynamic Form Fields ---
-
 export interface FormOption {
-  value: string;
   label: string;
+  value: string;
 }
 
-interface FormFieldBase {
+export interface BaseField {
   id: string;
   name: string;
-  component: 'text' | 'textarea' | 'phone' | 'address' | 'radio' | 'checkbox' | 'checkbox-group';
   modelProperty: string;
   required?: boolean;
+  defaultValue?: any;
 }
 
-export interface TextField extends FormFieldBase {
+export interface TextField extends BaseField {
   component: 'text';
   label: string;
-  type?: string;
+  type: 'text' | 'email' | 'password' | 'tel' | 'url' | 'number';
   placeholder?: string;
   pattern?: string;
 }
 
-export interface TextareaField extends FormFieldBase {
+export interface TextareaField extends BaseField {
   component: 'textarea';
-  label:string;
+  label: string;
   placeholder?: string;
+  rows?: number;
 }
 
-export interface PhoneField extends FormFieldBase {
-  component: 'phone';
-  legend: string;
-  countryCodeLabel: string;
-  numberLabel: string;
+export interface CheckboxField extends BaseField {
+  component: 'checkbox';
+  label: string;
 }
 
-export interface AddressField extends FormFieldBase {
-  component: 'address';
-  legend: string;
-  streetLabel: string;
-  cityLabel: string;
-  stateLabel: string;
-  zipLabel: string;
-  countryLabel: string;
-}
-
-export interface RadioField extends FormFieldBase {
+export interface RadioField extends BaseField {
   component: 'radio';
   legend: string;
   options: FormOption[];
 }
 
-export interface CheckboxField extends FormFieldBase {
-  component: 'checkbox';
-  label: string;
+export interface CheckboxGroupField extends BaseField {
+    component: 'checkbox-group';
+    legend: string;
+    options: FormOption[];
 }
 
-export interface CheckboxGroupField extends FormFieldBase {
-  component: 'checkbox-group';
+export interface PhoneField extends BaseField {
+  component: 'phone';
   legend: string;
-  options: FormOption[];
+  countryCodeLabel?: string;
+  numberLabel?: string;
 }
 
-export type FormField = TextField | TextareaField | PhoneField | AddressField | RadioField | CheckboxField | CheckboxGroupField;
+export interface AddressField extends BaseField {
+  component: 'address';
+  legend: string;
+  streetLabel?: string;
+  cityLabel?: string;
+  stateLabel?: string;
+  zipLabel?: string;
+  countryLabel?: string;
+}
+
+export type FormField = TextField | TextareaField | CheckboxField | RadioField | CheckboxGroupField | PhoneField | AddressField;
 
 export interface AvailableField {
   type: FormField['component'];
   label: string;
-  icon: string; // SVG path data
+  icon: string; // SVG path
+}
+
+export interface FormPage {
+  title: string;
+  fields: FormField[];
 }

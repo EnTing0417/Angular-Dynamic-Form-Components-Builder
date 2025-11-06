@@ -42,6 +42,10 @@ export class TextareaInputComponent extends BaseControlValueAccessor<string> {
   required = input<boolean>(false);
   rows = input<number>(3);
   
+  override writeValue(value: string | null): void {
+    this.value.set(value ?? '');
+  }
+
   onValueChange(event: Event): void {
     const value = (event.target as HTMLTextAreaElement).value;
     this.value.set(value);
